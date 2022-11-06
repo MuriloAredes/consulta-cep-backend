@@ -1,3 +1,7 @@
+using consultaCep_backend.Application.Delete;
+using consultaCep_backend.Application.GetAll;
+using consultaCep_backend.Application.Register;
+using consultaCep_backend.Application.Update;
 using consultaCep_backend.Database;
 using consultaCep_backend.Entities;
 using consultaCep_backend.interactor;
@@ -13,6 +17,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ISearchByZipCodeInteractor, SearchByZipCodeInteractor>();
+builder.Services.AddScoped<IRegisterCep, RegisterCep>();
+builder.Services.AddScoped<IGetAllEnderecosService, GetAllEnderecosService>();
+builder.Services.AddScoped<IUpdateEnderecosService, UpdateEnderecosService>();
+builder.Services.AddScoped<IDeleteEnderecoService, DeleteEnderecoService>();
 
 string strConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 

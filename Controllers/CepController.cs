@@ -1,6 +1,8 @@
-﻿using consultaCep_backend.Database;
-using consultaCep_backend.Entities;
-using consultaCep_backend.interactor;
+﻿using consultaCep_backend.Application.Delete;
+using consultaCep_backend.Application.GetAll;
+using consultaCep_backend.Application.Register;
+using consultaCep_backend.Application.Update;
+using consultaCep_backend.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace consultaCep_backend.Controllers
@@ -10,13 +12,21 @@ namespace consultaCep_backend.Controllers
 
     public class CepController : Controller
     {
-        private readonly ISearchByZipCodeInteractor _iSearchByZipCodeInteractor;
-        private readonly Context _db;
-        public CepController(ISearchByZipCodeInteractor iSearchByZipCodeInteractor,
-            Context db)
+        private readonly IRegisterCep _register;
+        private readonly IGetAllEnderecosService _getAllEnderecosService;
+        private readonly IUpdateEnderecosService _updateEnderecosService;
+        private readonly IDeleteEnderecoService _deleteEnderecoService;
+
+        public CepController(IRegisterCep register, 
+            IGetAllEnderecosService getAllService,
+            IDeleteEnderecoService deleteEnderecoService,
+            IUpdateEnderecosService updateEnderecosService
+            )
         {
-            _iSearchByZipCodeInteractor = iSearchByZipCodeInteractor;
-            _db = db;
+            _register = register;
+            _getAllEnderecosService = getAllService;
+            _deleteEnderecoService = deleteEnderecoService;
+            _updateEnderecosService = updateEnderecosService;
 
         }
 
@@ -26,31 +36,9 @@ namespace consultaCep_backend.Controllers
             try
             {
 
-                if (string.IsNullOrEmpty(cep))
-                    return BadRequest("insira um cep");
+                var result = await _register.Register(cep);
 
-                var consult = await _iSearchByZipCodeInteractor.SearchByZipCode("13088-106");
-
-                if (consult == null)
-                    return BadRequest("cep não encontrado ");
-
-
-                var endereco = new EnderecoEntite
-                {
-                    Cep = consult.Cep,
-                    Logradouro = consult.Rua,
-                    Complemento = consult.Complemento,
-                    Bairro = consult.Bairro,
-                    Localidade = consult.Bairro,
-                    Uf = consult.EstadoUf,
-                    Unidade = long.Parse(consult.Unidade),
-                    Ibge = Convert.ToInt32(consult.Ibge),
-                    Gia = consult.Gia
-                };
-                var create = await _db.Enderecos.AddAsync(endereco);
-                await _db.SaveChangesAsync();
-
-                return Ok("cadastrado");
+                return Ok(result);
 
 
             }
@@ -66,10 +54,37 @@ namespace consultaCep_backend.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(search))
-                    return BadRequest("search nao pode ser nulo");
+                var result = await _getAllEnderecosService.GetAll(search);
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
-                var result =  _db.Enderecos.Where(s => s.Localidade.Contains(search)).Select(res => res).ToList();
+        [HttpPut("api/[controller]/update")]
+        public async Task<IActionResult> GetAll(UpdateRequest request)
+        {
+            try
+            {
+                var result = await _updateEnderecosService.Update(request);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("api/[controller]/delete")]
+        public async Task<IActionResult> GetAll([FromBody]int id)
+        {
+            try
+            {
+                var result = await _deleteEnderecoService.Delete(id);
 
                 return Ok(result);
             }
